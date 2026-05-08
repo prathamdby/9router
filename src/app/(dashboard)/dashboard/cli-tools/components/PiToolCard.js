@@ -311,7 +311,7 @@ export default function PiToolCard({ tool, isExpanded, onToggle, baseUrl, apiKey
                   <div className="space-y-3 text-sm">
                     <div>
                       <p className="text-text-muted mb-1">Global install:</p>
-                      <code className="block px-3 py-2 bg-black/5 dark:bg-white/5 rounded font-mono text-xs">npm install -g @mariozechner/pi-coding-agent</code>
+                      <code className="block px-3 py-2 bg-black/5 dark:bg-white/5 rounded font-mono text-xs">npm install -g @earendil-works/pi-coding-agent</code>
                     </div>
                     <p className="text-text-muted">After installation, run <code className="px-1 bg-black/5 dark:bg-white/5 rounded">pi</code> in your project to verify.</p>
                   </div>
