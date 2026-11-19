@@ -7,7 +7,6 @@ import { DEVIN_SERVER_BASE, DEVIN_CHAT_PATH, DEVIN_MODELS } from "../../config/d
 export default {
   id: "devin",
   alias: "devin",
-  uiAlias: "dvn",
   display: {
     name: "Devin",
     icon: "smart_toy",
