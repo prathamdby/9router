@@ -41,6 +41,13 @@ describe("parseDevinAuthInput", () => {
       .toEqual({ kind: "code", code: "c9" });
     expect(() => parseDevinAuthInput("https://app.devin.ai/cb?error=access_denied")).toThrow("Devin authorization denied");
   });
+
+  it("rejects URL-shaped input carrying no code instead of using the URL as code", () => {
+    expect(() => parseDevinAuthInput("https://app.devin.ai/callback?state=s")).toThrow("Devin callback URL has no authorization code");
+    expect(() => parseDevinAuthInput("http://127.0.0.1:20128/callback")).toThrow("Devin callback URL has no authorization code");
+    // URL-shaped but unparseable
+    expect(() => parseDevinAuthInput("http://[::1")).toThrow("Devin callback URL has no authorization code");
+  });
 });
 
 describe("exchangeToken", () => {
@@ -74,6 +81,14 @@ describe("exchangeToken", () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
     await expect(devin.exchangeToken(devin.config, "code-1", null, "v"))
       .rejects.toThrow("no token");
+  });
+
+  it("callback URL without a code rejects and never hits the network", async () => {
+    await expect(devin.exchangeToken(devin.config, "https://app.devin.ai/callback?state=s", null, "v"))
+      .rejects.toThrow("Devin callback URL has no authorization code");
+    await expect(devin.exchangeToken(devin.config, "http://[::1", null, "v"))
+      .rejects.toThrow("Devin callback URL has no authorization code");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

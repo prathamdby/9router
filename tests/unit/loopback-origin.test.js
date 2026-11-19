@@ -1,6 +1,6 @@
 // loopbackTwin — localhost <-> 127.0.0.1, same scheme+port, nothing else.
 import { describe, it, expect } from "vitest";
-import { loopbackTwin } from "../../src/shared/utils/loopbackOrigin.js";
+import { loopbackTwin, isTrustedOAuthMessageOrigin } from "../../src/shared/utils/loopbackOrigin.js";
 
 describe("loopbackTwin", () => {
   it("swaps localhost <-> 127.0.0.1 preserving scheme and port", () => {
@@ -22,5 +22,33 @@ describe("loopbackTwin", () => {
     expect(loopbackTwin("")).toBeNull();
     expect(loopbackTwin(null)).toBeNull();
     expect(loopbackTwin(undefined)).toBeNull();
+  });
+});
+
+describe("isTrustedOAuthMessageOrigin", () => {
+  const SELF = "http://localhost:20128";
+
+  it("accepts same origin and loopback origins on any port", () => {
+    expect(isTrustedOAuthMessageOrigin(SELF, SELF)).toBe(true);
+    expect(isTrustedOAuthMessageOrigin("http://localhost:1455", SELF)).toBe(true);
+    expect(isTrustedOAuthMessageOrigin("http://127.0.0.1:56121", SELF)).toBe(true);
+    expect(isTrustedOAuthMessageOrigin("http://127.0.0.1:20127", SELF)).toBe(true);
+    expect(isTrustedOAuthMessageOrigin("https://localhost:8443", SELF)).toBe(true);
+  });
+
+  it("rejects look-alike hostnames and foreign origins", () => {
+    expect(isTrustedOAuthMessageOrigin("https://localhost.evil.com", SELF)).toBe(false);
+    expect(isTrustedOAuthMessageOrigin("http://127.0.0.1.evil.com", SELF)).toBe(false);
+    expect(isTrustedOAuthMessageOrigin("http://evil.com", SELF)).toBe(false);
+    expect(isTrustedOAuthMessageOrigin("http://localhost.attacker.io:1455", SELF)).toBe(false);
+  });
+
+  it("rejects null-ish, empty and unparseable origins", () => {
+    expect(isTrustedOAuthMessageOrigin("null", SELF)).toBe(false);
+    expect(isTrustedOAuthMessageOrigin("", SELF)).toBe(false);
+    expect(isTrustedOAuthMessageOrigin("garbage", SELF)).toBe(false);
+    expect(isTrustedOAuthMessageOrigin("file:///etc/passwd", SELF)).toBe(false);
+    expect(isTrustedOAuthMessageOrigin(null, SELF)).toBe(false);
+    expect(isTrustedOAuthMessageOrigin(undefined, SELF)).toBe(false);
   });
 });

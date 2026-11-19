@@ -18,8 +18,10 @@ function formatDevinPlanLabel(rawPlan) {
 
 // The dashboard's generic normalizer keeps only used/total/percentage/resetAt
 // and treats total 0 as unlimited, so remaining-percent quotas are expressed as
-// used out of 100.
+// used out of 100. A quota the server never reported (null) with no reset time
+// is omitted; null + resetAt means "reported as exhausted" → used 100.
 function makePercentQuotaRow(remainingPercent, resetAt) {
+  if (remainingPercent == null && !resetAt) return null;
   const pct = Math.round(Math.max(0, Math.min(100, Number(remainingPercent) || 0)));
   return {
     used: 100 - pct,
@@ -33,12 +35,14 @@ export function parseDevinUserStatusUsage(data) {
     return { plan: "Devin", quotas: {}, message: "Devin quota data unavailable." };
   }
   const quotas = {};
-  quotas["Daily"] = makePercentQuotaRow(data.dailyQuotaRemainingPercent, data.dailyQuotaResetAt);
-  quotas["Weekly"] = makePercentQuotaRow(data.weeklyQuotaRemainingPercent, data.weeklyQuotaResetAt);
+  const daily = makePercentQuotaRow(data.dailyQuotaRemainingPercent, data.dailyQuotaResetAt);
+  if (daily) quotas["Daily"] = daily;
+  const weekly = makePercentQuotaRow(data.weeklyQuotaRemainingPercent, data.weeklyQuotaResetAt);
+  if (weekly) quotas["Weekly"] = weekly;
   return {
     plan: formatDevinPlanLabel(data.plan),
     quotas,
-    message: null,
+    message: Object.keys(quotas).length === 0 ? "Devin did not report quota limits for this plan." : null,
     planId: data.plan || null,
     orgName: data.orgName || null,
   };

@@ -64,6 +64,32 @@ describe("getDevinUsage", () => {
     expect(res.quotas.Weekly.total).toBe(100);
   });
 
+  it("omits unreported quotas; null + resetAt counts as exhausted", () => {
+    const res = parseDevinUserStatusUsage({
+      plan: "core",
+      dailyQuotaRemainingPercent: null,
+      weeklyQuotaRemainingPercent: null,
+      dailyQuotaResetAt: "2025-01-01T00:00:00.000Z",
+      weeklyQuotaResetAt: null,
+    });
+    // Daily: pct absent but a reset exists → exhausted (used 100).
+    expect(res.quotas.Daily).toEqual({ used: 100, total: 100, resetAt: "2025-01-01T00:00:00.000Z" });
+    // Weekly: nothing reported at all → row omitted.
+    expect(res.quotas.Weekly).toBeUndefined();
+    expect(res.message).toBeNull();
+  });
+
+  it("no quota fields at all → explanatory message, empty quotas", () => {
+    const res = parseDevinUserStatusUsage({
+      plan: "free",
+      dailyQuotaRemainingPercent: null,
+      weeklyQuotaRemainingPercent: null,
+    });
+    expect(res.quotas).toEqual({});
+    expect(res.message).toBe("Devin did not report quota limits for this plan.");
+    expect(res.plan).toBe("Free");
+  });
+
   it("missing token → guidance message, no fetch", async () => {
     const res = await getDevinUsage(null);
     expect(res.message).toContain("session token");

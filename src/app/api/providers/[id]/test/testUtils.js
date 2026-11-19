@@ -450,7 +450,13 @@ async function testOAuthConnection(connection, effectiveProxy = null) {
   if (connection.provider === "devin") {
     try {
       const res = await fetchDevinUserStatus(accessToken, effectiveProxy);
-      if (res.status === 200) return { valid: true, error: null, refreshed };
+      if (res.status === 200) {
+        const d = res.data;
+        if (d && (d.userId || d.email || d.userName || d.plan)) {
+          return { valid: true, error: null, refreshed };
+        }
+        return { valid: false, error: "Devin status check returned no account data", refreshed };
+      }
       if (res.status === 401 || res.status === 403) {
         return { valid: false, error: "Token invalid or revoked", refreshed };
       }
