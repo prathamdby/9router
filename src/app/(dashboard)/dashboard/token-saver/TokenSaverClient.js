@@ -9,6 +9,7 @@ import {
   CAVEMAN_LEVELS,
   PONYTAIL_LEVELS,
 } from "../endpoint/endpointConstants";
+import { withBasePath } from "@/shared/utils/basePath";
 
 export default function TokenSaverClient() {
   const [rtkEnabled, setRtkEnabledState] = useState(true);
@@ -812,7 +813,7 @@ export default function TokenSaverClient() {
                 {pxpipeStatus.installed ? "Manage" : "Setup"}
               </button>
               <a
-                href="/dashboard/pxpipe"
+                href={withBasePath("/dashboard/pxpipe")}
                 className="text-xs text-primary underline hover:opacity-80"
               >
                 Dashboard
@@ -849,7 +850,7 @@ export default function TokenSaverClient() {
           </div>
           {headroomRunning && (
             <a
-              href="/api/headroom/proxy/dashboard"
+              href={withBasePath("/api/headroom/proxy/dashboard")}
               target="_blank"
               rel="noreferrer"
               className="w-full rounded border border-border px-4 py-2 text-center text-sm hover:bg-surface-2"
@@ -1024,7 +1025,7 @@ export default function TokenSaverClient() {
                 Repair
               </Button>
               <a
-                href="/dashboard/pxpipe#logs"
+                href={withBasePath("/dashboard/pxpipe#logs")}
                 className="col-span-2 rounded border border-border px-4 py-2 text-center text-sm hover:bg-surface-2"
               >
                 Open Logs

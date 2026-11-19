@@ -28,6 +28,7 @@ vi.mock("@/lib/auth/oidc", () => ({
 }));
 
 vi.mock("@/lib/auth/dashboardSession", () => ({
+  AUTH_COOKIE_NAME: "auth_token",
   getDashboardAuthSession: mocks.getDashboardAuthSession,
 }));
 

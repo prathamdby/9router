@@ -4,6 +4,7 @@ import { getProviderModels, PROVIDER_ID_TO_ALIAS } from "open-sse/config/provide
 import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider } from "@/shared/constants/providers";
 import { UPDATER_CONFIG } from "@/shared/constants/config";
 import { pingModelByKind } from "@/app/api/models/test/ping";
+import { getInternalBaseUrl } from "@/shared/utils/basePath";
 
 /**
  * POST /api/providers/[id]/test-models
@@ -24,7 +25,7 @@ export async function POST(request, { params }) {
 
     let models = getProviderModels(alias);
 
-    const baseUrl = `http://127.0.0.1:${process.env.PORT || UPDATER_CONFIG.appPort}`;
+    const baseUrl = getInternalBaseUrl(process.env.PORT || UPDATER_CONFIG.appPort);
 
     // Compatible providers: fetch live model list
     if (isCompatible && models.length === 0) {

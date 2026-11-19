@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, Button, Input } from "@/shared/components";
+import { withBasePath } from "@/shared/utils/basePath";
 
 export default function LoginPage() {
   const [password, setPassword] = useState("");
@@ -41,7 +42,7 @@ export default function LoginPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated === true || data.requireLogin === false) {
-            window.location.assign("/dashboard");
+            window.location.assign(withBasePath("/dashboard"));
             return;
           }
           setHasPassword(!!data.hasPassword);
@@ -82,7 +83,7 @@ export default function LoginPage() {
           setMustChange(true);
           return;
         }
-        window.location.assign("/dashboard");
+        window.location.assign(withBasePath("/dashboard"));
       } else {
         const data = await res.json();
         setError(data.error || "Invalid password");
@@ -108,7 +109,7 @@ export default function LoginPage() {
         body: JSON.stringify({ currentPassword: password, newPassword }),
       });
       if (res.ok) {
-        window.location.assign("/dashboard");
+        window.location.assign(withBasePath("/dashboard"));
       } else {
         const data = await res.json();
         setError(data.error || "Failed to set password");
@@ -121,11 +122,11 @@ export default function LoginPage() {
   };
 
   const handleOidcLogin = () => {
-    window.location.href = "/api/auth/oidc/start";
+    window.location.href = withBasePath("/api/auth/oidc/start");
   };
 
   const handleSamlLogin = () => {
-    window.location.href = "/api/auth/saml/start";
+    window.location.href = withBasePath("/api/auth/saml/start");
   };
 
   const isSsoEnabled = ["sso", "oidc", "saml", "both"].includes(authMode);

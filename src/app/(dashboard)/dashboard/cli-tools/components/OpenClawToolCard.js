@@ -7,6 +7,7 @@ import BaseUrlSelect from "./BaseUrlSelect";
 import { rememberEndpoint } from "./cliEndpointPresets";
 import ApiKeySelect from "./ApiKeySelect";
 import { matchKnownEndpoint } from "./cliEndpointMatch";
+import { getAppBaseUrl, getInternalBaseUrl, withBasePath } from "@/shared/utils/basePath";
 
 export default function OpenClawToolCard({
   tool,
@@ -114,9 +115,9 @@ export default function OpenClawToolCard({
 
   const getLocalBaseUrl = () => {
     if (typeof window !== "undefined") {
-      return normalizeLocalhost(window.location.origin);
+      return normalizeLocalhost(getAppBaseUrl());
     }
-    return "http://127.0.0.1:20128";
+    return getInternalBaseUrl();
   };
 
   const getEffectiveBaseUrl = () => {
@@ -237,7 +238,7 @@ export default function OpenClawToolCard({
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
-            <Image src="/providers/openclaw.png" alt={tool.name} width={32} height={32} className="size-8 object-contain rounded-lg" sizes="32px" onError={(e) => { e.target.style.display = "none"; }} loading="lazy" decoding="async" />
+            <Image src={withBasePath("/providers/openclaw.png")} alt={tool.name} width={32} height={32} className="size-8 object-contain rounded-lg" sizes="32px" onError={(e) => { e.target.style.display = "none"; }} loading="lazy" decoding="async" />
           </div>
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-2">

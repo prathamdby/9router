@@ -16,6 +16,9 @@ RUN if [ "$ALPINE_MIRROR" != "dl-cdn.alpinelinux.org" ]; then \
 
 FROM base AS builder
 ARG NPM_REGISTRY
+# Bake a URL sub-path (e.g. /9router) into the client bundles; empty = root.
+ARG NEXT_PUBLIC_BASE_PATH=""
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
 
 RUN apk add --no-cache python3 make g++ linux-headers
 

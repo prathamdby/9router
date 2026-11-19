@@ -9,6 +9,7 @@ import { cn } from "@/shared/utils/cn";
 import { APP_CONFIG } from "@/shared/constants/config";
 import { LOCALE_COOKIE, normalizeLocale } from "@/i18n/config";
 import { LOCALE_FLAGS } from "@/shared/constants/locales";
+import { getAppBaseUrl, withBasePath } from "@/shared/utils/basePath";
 
 function getLocaleFromCookie() {
   if (typeof document === "undefined") return "en";
@@ -48,10 +49,10 @@ export default function ProfilePage() {
   const [oidcTestStatus, setOidcTestStatus] = useState({ type: "", message: "" });
   const [oidcExpanded, setOidcExpanded] = useState(false);
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const oidcRedirectUri = origin ? `${origin}/api/auth/oidc/callback` : "/api/auth/oidc/callback";
-  const samlAcsUrl = origin ? `${origin}/api/auth/saml/acs` : "/api/auth/saml/acs";
-  const samlMetadataUrl = origin ? `${origin}/api/auth/saml/metadata` : "/api/auth/saml/metadata";
+  const appBaseUrl = typeof window !== "undefined" ? getAppBaseUrl() : "";
+  const oidcRedirectUri = appBaseUrl ? `${appBaseUrl}/api/auth/oidc/callback` : withBasePath("/api/auth/oidc/callback");
+  const samlAcsUrl = appBaseUrl ? `${appBaseUrl}/api/auth/saml/acs` : withBasePath("/api/auth/saml/acs");
+  const samlMetadataUrl = appBaseUrl ? `${appBaseUrl}/api/auth/saml/metadata` : withBasePath("/api/auth/saml/metadata");
   
   // SAML State
   const [ssoTypeTab, setSsoTypeTab] = useState("saml");
@@ -756,7 +757,7 @@ export default function ProfilePage() {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
-        window.location.assign("/login");
+        window.location.assign(withBasePath("/login"));
       }
     } catch (err) {
       console.error("Failed to logout:", err);
