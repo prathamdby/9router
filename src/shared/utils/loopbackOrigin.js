@@ -19,3 +19,21 @@ export function loopbackTwin(origin) {
   return `${url.protocol}//${twinHost}${url.port ? `:${url.port}` : ""}`;
 }
 
+// postMessage origin gate for OAuth callbacks: accept the page's own origin,
+// or a real loopback origin (hostname exactly localhost/127.0.0.1, any port —
+// CLI callback proxies and the Devin loopback twin depend on that). Anything
+// else, including hostnames that merely contain "localhost", is rejected.
+export function isTrustedOAuthMessageOrigin(origin, selfOrigin) {
+  if (!origin || typeof origin !== "string") return false;
+  if (origin === selfOrigin) return true;
+  let url;
+  try {
+    url = new URL(origin);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+  const host = url.hostname.toLowerCase();
+  return host === "localhost" || host === "127.0.0.1";
+}
+

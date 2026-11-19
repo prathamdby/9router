@@ -26,13 +26,13 @@ function parseDevinAuthInput(raw) {
     try {
       url = new URL(input);
     } catch {
-      return { kind: "code", code: input };
+      throw new Error("Devin callback URL has no authorization code");
     }
     const errParam = url.searchParams.get("error");
     if (errParam) throw new Error("Devin authorization denied");
     const code = url.searchParams.get("code");
     if (code) return { kind: "code", code };
-    return { kind: "code", code: input };
+    throw new Error("Devin callback URL has no authorization code");
   }
   if (input.startsWith(DEVIN_SESSION_TOKEN_PREFIX) || input.startsWith("eyJ")) {
     return { kind: "token", token: input };

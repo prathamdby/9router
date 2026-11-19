@@ -606,8 +606,10 @@ export function parseGetUserStatusResponse(data) {
     orgId: "",
     orgName: "",
     plan: "",
-    dailyQuotaRemainingPercent: 0,
-    weeklyQuotaRemainingPercent: 0,
+    // proto3 omits 0 on the wire, so "absent" must stay distinguishable from
+    // "0 remaining" — null means the server never reported the quota.
+    dailyQuotaRemainingPercent: null,
+    weeklyQuotaRemainingPercent: null,
     dailyQuotaResetAt: "",
     weeklyQuotaResetAt: "",
     planStart: "",

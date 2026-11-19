@@ -353,6 +353,16 @@ describe("user status", () => {
     expect(new Date(s.planStart).getTime()).toBe(1700000000 * 1000);
     expect(new Date(s.planEnd).getTime()).toBe(1800000000 * 1000);
   });
+
+  it("quota percents stay null when absent (proto3 omission ≠ 0)", () => {
+    const planStatus = concatBytes(encodeVarintField(17, 1700001000)); // resets only, no 14/15
+    const userStatus = concatBytes(encodeStringField(3, "devuser"), encodeBytesField(13, planStatus));
+    const s = parseGetUserStatusResponse(encodeBytesField(1, userStatus));
+    expect(s.dailyQuotaRemainingPercent).toBeNull();
+    expect(s.weeklyQuotaRemainingPercent).toBeNull();
+    expect(new Date(s.dailyQuotaResetAt).getTime()).toBe(1700001000 * 1000);
+    expect(s.weeklyQuotaResetAt).toBe("");
+  });
 });
 
 describe("tool call id codec", () => {

@@ -14,7 +14,7 @@ import { DEVIN_TOOL_ID_PREFIX, DEVIN_SERVER_BASE, DEVIN_CHAT_PATH } from "open-s
 const fetchMock = vi.hoisted(() => vi.fn());
 vi.mock("open-sse/utils/proxyFetch.js", () => ({ proxyAwareFetch: fetchMock }));
 
-const { DevinExecutor } = await import("open-sse/executors/devin.js");
+const { DevinExecutor, __devinStateSizes, __devinSessionTurnIndex } = await import("open-sse/executors/devin.js");
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -404,6 +404,67 @@ describe("DevinExecutor", () => {
     // tool call id decoded back to upstream form on the wire
     const tcSub = decodeProtoFields(assistant.find((f) => f.field === 6).value);
     expect(dec.decode(tcSub.find((f) => f.field === 1).value)).toBe("sig|call");
+  });
+
+  it("signature store is scoped per connectionId: A's sig never reattaches for B", async () => {
+    const tc = concatBytes(encodeStringField(1, "sig|call"), encodeStringField(2, "fn"), encodeStringField(3, "{}"));
+    const turn1 = () => upstreamResponse([
+      wrapConnectEnvelope(concatBytes(
+        encodeStringField(9, "chain of thought"),
+        encodeBytesField(10, Uint8Array.from([0xde, 0xad])),
+        encodeStringField(21, "sig_type_x"),
+        encodeBytesField(6, tc),
+      )),
+      wrapConnectEnvelope(enc.encode("{}"), 0x02),
+    ]);
+    fetchMock.mockResolvedValue(turn1());
+    const ex = new DevinExecutor();
+    const credsA = { accessToken: "devin-session-token$a", connectionId: "conn-A" };
+    const { response } = await ex.execute(baseArgs({}, { credentials: credsA, providerSessionId: "owner-sess" }));
+    const events = await sseEvents(response);
+    const emittedId = events.flatMap((e) => e.choices?.[0]?.delta?.tool_calls || []).find((t) => t.id)?.id;
+
+    const history = (id) => ([
+      { role: "assistant", content: "", tool_calls: [{ id, function: { name: "fn", arguments: "{}" } }] },
+      { role: "tool", tool_call_id: id, content: "r" },
+      { role: "user", content: "next" },
+    ]);
+    const okEnd = () => upstreamResponse([wrapConnectEnvelope(enc.encode("{}"), 0x02)]);
+
+    // Same connection → thinking/signature reattached.
+    fetchMock.mockResolvedValue(okEnd());
+    await ex.execute(baseArgs({ messages: history(emittedId) }, { credentials: credsA, providerSessionId: "owner-sess" }));
+    const promptsA = decodeProtoFields(fetchMock.mock.calls[1][1].body.subarray(5))
+      .filter((f) => f.field === 3).map((f) => decodeProtoFields(f.value));
+    expect(dec.decode(promptsA[0].find((f) => f.field === 11).value)).toBe("chain of thought");
+    expect([...promptsA[0].find((f) => f.field === 12).value]).toEqual([0xde, 0xad]);
+
+    // Other connection, identical history → nothing reattached.
+    fetchMock.mockResolvedValue(okEnd());
+    const credsB = { accessToken: "devin-session-token$b", connectionId: "conn-B" };
+    await ex.execute(baseArgs({ messages: history(emittedId) }, { credentials: credsB, providerSessionId: "owner-sess" }));
+    const promptsB = decodeProtoFields(fetchMock.mock.calls[2][1].body.subarray(5))
+      .filter((f) => f.field === 3).map((f) => decodeProtoFields(f.value));
+    expect(promptsB[0].find((f) => f.field === 11)).toBeUndefined();
+    expect(promptsB[0].find((f) => f.field === 12)).toBeUndefined();
+  });
+
+  it("execute without providerSessionId does not touch the turn counter map", async () => {
+    fetchMock.mockResolvedValue(upstreamResponse([wrapConnectEnvelope(enc.encode("{}"), 0x02)]));
+    const before = __devinStateSizes().sessionTurnCounters;
+    await new DevinExecutor().execute(baseArgs({}, { providerSessionId: null }));
+    await new DevinExecutor().execute(baseArgs({}, { providerSessionId: undefined }));
+    expect(__devinStateSizes().sessionTurnCounters).toBe(before);
+  });
+
+  it("turn counter is true LRU: a recently-used session survives eviction pressure", () => {
+    for (let i = 0; i < 5000; i++) __devinSessionTurnIndex(`lru-fill-${i}`);
+    __devinSessionTurnIndex("lru-active"); // insert at cap → evicts lru-fill-0
+    for (let i = 5000; i < 5020; i++) __devinSessionTurnIndex(`lru-fill-${i}`);
+    // "active" was touched last → still counted (1 = its second turn), not evicted.
+    expect(__devinSessionTurnIndex("lru-active")).toBe(1);
+    // Oldest entries were evicted and restart at 0.
+    expect(__devinSessionTurnIndex("lru-fill-0")).toBe(0);
   });
 
   it("assistant tool_calls without a stored signature omit thinking", async () => {

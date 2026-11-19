@@ -38,7 +38,9 @@ const SIGNATURE_STORE_MAX = 2000;
 const SIGNATURE_STORE_TTL_MS = 60 * 60 * 1000;
 const SESSION_COUNTER_MAX = 5000;
 
-// encoded tool call id → {thinking, signature(Uint8Array), signatureType, at}
+// connectionId + encoded tool call id → {thinking, signature, signatureType, at}.
+// Entries are scoped per connection so one account's signatures can never be
+// reattached to another connection's conversation.
 const signatureStore = new Map();
 // sessionId → request ordinal (field 15.2)
 const sessionTurnCounters = new Map();
@@ -50,24 +52,40 @@ function storeSetBound(map, key, value, max) {
   map.set(key, value);
 }
 
-function signatureStoreSet(id, entry) {
-  storeSetBound(signatureStore, id, { ...entry, at: Date.now() }, SIGNATURE_STORE_MAX);
+function signatureStoreSet(owner, id, entry) {
+  storeSetBound(signatureStore, `${owner}\u0000${id}`, { ...entry, at: Date.now() }, SIGNATURE_STORE_MAX);
 }
 
-function signatureStoreGet(id) {
-  const entry = signatureStore.get(id);
+function signatureStoreGet(owner, id) {
+  const key = `${owner}\u0000${id}`;
+  const entry = signatureStore.get(key);
   if (!entry) return null;
   if (Date.now() - entry.at > SIGNATURE_STORE_TTL_MS) {
-    signatureStore.delete(id);
+    signatureStore.delete(key);
     return null;
   }
+  // Access refreshes recency — keep eviction true LRU, not insertion order.
+  signatureStore.delete(key);
+  signatureStore.set(key, entry);
   return entry;
 }
 
 function nextSessionTurnIndex(sessionId) {
   const n = sessionTurnCounters.get(sessionId) || 0;
-  storeSetBound(sessionTurnCounters, sessionId, n + 1, SESSION_COUNTER_MAX);
+  if (sessionTurnCounters.size >= SESSION_COUNTER_MAX && !sessionTurnCounters.has(sessionId)) {
+    sessionTurnCounters.delete(sessionTurnCounters.keys().next().value);
+  }
+  sessionTurnCounters.delete(sessionId);
+  sessionTurnCounters.set(sessionId, n + 1);
   return n;
+}
+
+// Test-only accessors for the module-level stores.
+export function __devinStateSizes() {
+  return { signatureStore: signatureStore.size, sessionTurnCounters: sessionTurnCounters.size };
+}
+export function __devinSessionTurnIndex(sessionId) {
+  return nextSessionTurnIndex(sessionId);
 }
 
 function uuidFromHash(text) {
@@ -147,7 +165,7 @@ export class DevinExecutor extends BaseExecutor {
   }
 
   // OpenAI messages → Devin prompt list + system prompt.
-  mapMessages(messages) {
+  mapMessages(messages, owner = "") {
     let systemPrompt = "";
     const prompts = [];
     const pendingToolIds = new Set();
@@ -201,7 +219,7 @@ export class DevinExecutor extends BaseExecutor {
         if (toolCalls.length > 0) {
           for (const tc of toolCalls) {
             // The store is keyed by the *emitted* (encoded) id.
-            const stored = signatureStoreGet(encodeToolId(tc.id));
+            const stored = signatureStoreGet(owner, encodeToolId(tc.id));
             if (stored) {
               thinking = stored.thinking || "";
               signature = stored.signature || null;
@@ -244,7 +262,8 @@ export class DevinExecutor extends BaseExecutor {
     const budgetTokens = Number(b.thinking?.budget_tokens) || 0;
     const modelUid = resolveDevinModelUid(model, thinkingLevel, budgetTokens);
 
-    const mapped = this.mapMessages(b.messages);
+    const owner = credentials?.connectionId || "";
+    const mapped = this.mapMessages(b.messages, owner);
     if (mapped.emptyUserTurn) {
       return {
         response: devinErrorResponse(400, "Devin request rejected: last user turn produced no text or image content", "invalid_request"),
@@ -273,7 +292,9 @@ export class DevinExecutor extends BaseExecutor {
     // Stable session identity from providerSessionId preserves upstream prompt caching.
     const sessionId = uuidFromHash(`devin:${providerSessionId || randomUUID()}`);
     const cascadeId = sessionId;
-    const turnIndex = nextSessionTurnIndex(sessionId);
+    // Without a stable session id there is nothing to count turns against —
+    // leave the counter map untouched.
+    const turnIndex = providerSessionId ? nextSessionTurnIndex(sessionId) : 0;
 
     const protoPayload = buildGetChatMessageRequest({
       sessionToken,
@@ -355,11 +376,11 @@ export class DevinExecutor extends BaseExecutor {
       }
     }
 
-    const response = this.transformToSSE({ upstream, reader, frameReader, bufferedFrames, model });
+    const response = this.transformToSSE({ upstream, reader, frameReader, bufferedFrames, model, owner });
     return { response, url, headers, transformedBody: safeBody };
   }
 
-  transformToSSE({ upstream, reader, frameReader, bufferedFrames, model }) {
+  transformToSSE({ upstream, reader, frameReader, bufferedFrames, model, owner = "" }) {
     const responseId = `chatcmpl-devin-${Date.now()}`;
     const created = Math.floor(Date.now() / 1000);
     const encoder = new TextEncoder();
@@ -513,7 +534,7 @@ export class DevinExecutor extends BaseExecutor {
           // Persist signature context under every emitted (encoded) tool call id.
           if (respSignature || respThinking) {
             for (const id of emittedToolIds) {
-              signatureStoreSet(id, { thinking: respThinking, signature: respSignature, signatureType: respSignatureType });
+              signatureStoreSet(owner, id, { thinking: respThinking, signature: respSignature, signatureType: respSignatureType });
             }
           }
 
