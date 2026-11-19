@@ -36,6 +36,19 @@ export function withBasePath(path) {
   return `${BASE_PATH}${path}`;
 }
 
+// Admins sometimes include the sub-path itself in BASE_URL-style settings
+// (e.g. "https://host/9router"); appending BASE_PATH again would double it.
+// Strip only an exact trailing BASE_PATH, never other path segments.
+export function stripBasePathSuffix(url) {
+  if (!BASE_PATH || typeof url !== "string") return url;
+  const trimmed = url.replace(/\/+$/, "");
+  if (!trimmed.endsWith(BASE_PATH)) return url;
+  // Only strip when BASE_PATH sits in the path portion: the character before
+  // it must not be "/" (a match inside "https://host" is part of the origin).
+  if (trimmed[trimmed.length - BASE_PATH.length - 1] === "/") return url;
+  return trimmed.slice(0, trimmed.length - BASE_PATH.length);
+}
+
 // Absolute same-origin URL of the app root as seen by the browser.
 export function getAppBaseUrl() {
   return `${window.location.origin}${BASE_PATH}`;

@@ -1,6 +1,6 @@
 import { SAML } from "@node-saml/node-saml";
 import { getSettings } from "../db/repos/settingsRepo.js";
-import { withBasePath } from "../../shared/utils/basePath.js";
+import { stripBasePathSuffix, withBasePath } from "../../shared/utils/basePath.js";
 
 /**
  * Formats a raw Base64 string or unformatted X.509 certificate into standard PEM format.
@@ -69,7 +69,7 @@ export function getSamlBaseUrl(request, settings) {
     "";
 
   if (configuredBaseUrl) {
-    return trimTrailingSlashes(configuredBaseUrl);
+    return stripBasePathSuffix(trimTrailingSlashes(configuredBaseUrl));
   }
 
   if (request) {

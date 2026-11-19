@@ -81,6 +81,37 @@ describe("withBasePath", () => {
   });
 });
 
+describe("stripBasePathSuffix", () => {
+  it("strips an exact trailing base path from a configured URL", async () => {
+    const { stripBasePathSuffix } = await loadModule("/9router");
+    expect(stripBasePathSuffix("https://app.example/9router")).toBe("https://app.example");
+    expect(stripBasePathSuffix("https://app.example/9router/")).toBe("https://app.example");
+    expect(stripBasePathSuffix("https://app.example/9router///")).toBe("https://app.example");
+    expect(stripBasePathSuffix("https://app.example/other/9router")).toBe("https://app.example/other");
+  });
+
+  it("leaves other paths and the origin alone", async () => {
+    const { stripBasePathSuffix } = await loadModule("/9router");
+    expect(stripBasePathSuffix("https://app.example/other")).toBe("https://app.example/other");
+    expect(stripBasePathSuffix("https://app.example")).toBe("https://app.example");
+    // A host that merely contains the base-path text is not a suffix match.
+    expect(stripBasePathSuffix("https://9router")).toBe("https://9router");
+    expect(stripBasePathSuffix("https://app.example/x9router")).toBe("https://app.example/x9router");
+  });
+
+  it("is an identity when BASE_PATH is empty", async () => {
+    const { stripBasePathSuffix } = await loadModule(undefined);
+    expect(stripBasePathSuffix("https://app.example/9router")).toBe("https://app.example/9router");
+  });
+
+  it("returns non-string input unchanged", async () => {
+    const { stripBasePathSuffix } = await loadModule("/9router");
+    expect(stripBasePathSuffix(null)).toBe(null);
+    expect(stripBasePathSuffix(undefined)).toBe(undefined);
+    expect(stripBasePathSuffix(42)).toBe(42);
+  });
+});
+
 describe("getInternalBaseUrl", () => {
   it("uses PORT env or the default app port, plus the base path", async () => {
     const { getInternalBaseUrl } = await loadModule("/9router");
