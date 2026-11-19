@@ -2,14 +2,15 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSettings } from "@/lib/localDb";
 import { formatX509Certificate } from "@/lib/auth/saml.js";
-import { verifyDashboardAuthToken } from "@/lib/auth/dashboardSession";
+import { AUTH_COOKIE_NAME, verifyDashboardAuthToken } from "@/lib/auth/dashboardSession";
+import { withBasePath } from "@/shared/utils/basePath";
 
 async function canAccessTestRoute() {
   const settings = await getSettings();
   if (settings.requireLogin === false) return true;
 
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
+  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   return await verifyDashboardAuthToken(token);
 }
 
@@ -54,8 +55,8 @@ export async function POST(request) {
     }
 
     const origin = new URL(request.url).origin;
-    const acsUrl = `${origin}/api/auth/saml/acs`;
-    const metadataUrl = `${origin}/api/auth/saml/metadata`;
+    const acsUrl = `${origin}${withBasePath("/api/auth/saml/acs")}`;
+    const metadataUrl = `${origin}${withBasePath("/api/auth/saml/metadata")}`;
 
     return NextResponse.json({
       ok: true,

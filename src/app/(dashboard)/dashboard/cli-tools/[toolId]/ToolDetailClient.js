@@ -11,6 +11,7 @@ import {
   ClineToolCard, KiloToolCard, DeepSeekTuiToolCard,
   JcodeToolCard, GrokBuildToolCard, GenericCliToolCard,
 } from "../components";
+import { BASE_PATH, getAppBaseUrl } from "@/shared/utils/basePath";
 
 const CLOUD_URL = process.env.NEXT_PUBLIC_CLOUD_URL;
 
@@ -122,8 +123,8 @@ export default function ToolDetailClient({ toolId, machineId }) {
   const getBaseUrl = () => {
     if (tunnelEnabled && tunnelPublicUrl) return tunnelPublicUrl;
     if (cloudEnabled && CLOUD_URL) return CLOUD_URL;
-    if (typeof window !== "undefined") return window.location.origin;
-    return "http://localhost:20128";
+    if (typeof window !== "undefined") return getAppBaseUrl();
+    return `http://localhost:20128${BASE_PATH}`;
   };
 
   const renderToolCard = () => {

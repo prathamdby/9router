@@ -28,6 +28,7 @@ import AutoPingScheduleModal from "./AutoPingScheduleModal";
 import WebLoginButton, { WEB_LOGIN_PROVIDERS } from "../components/WebLoginButton.js";
 import MinimaxLeaseButton from "../components/MinimaxLeaseButton.js";
 import { getScheduleSlotLabels } from "@/shared/services/quotaPingSchedule";
+import { withBasePath } from "@/shared/utils/basePath";
 
 const ONE_BY_ONE_DELAY_MS = 1000;
 
@@ -1395,10 +1396,10 @@ export default function ProviderDetailPage() {
   // Determine icon path: OpenAI Compatible providers use specialized icons
   const getHeaderIconPath = () => {
     if (isOpenAICompatible && providerInfo.apiType) {
-      return providerInfo.apiType === "responses" ? "/providers/oai-r.png" : "/providers/oai-cc.png";
+      return providerInfo.apiType === "responses" ? withBasePath("/providers/oai-r.png") : withBasePath("/providers/oai-cc.png");
     }
     if (isAnthropicCompatible) {
-      return "/providers/anthropic-m.png";
+      return withBasePath("/providers/anthropic-m.png");
     }
     return getProviderIconSrc(providerInfo.id);
   };

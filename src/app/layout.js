@@ -7,6 +7,7 @@ import "@/lib/network/initOutboundProxy"; // Auto-initialize outbound proxy env
 import "@/shared/services/bootstrap"; // Auto-run initializeApp (watchdog, auto-resume tunnel)
 import { initConsoleLogCapture } from "@/lib/consoleLogBuffer";
 import { RuntimeI18nProvider } from "@/i18n/RuntimeI18nProvider";
+import { BASE_PATH, basePathRequestShim, withBasePath } from "@/shared/utils/basePath";
 
 // Hook console immediately at module load time (server-side only, runs once)
 initConsoleLogCapture();
@@ -20,7 +21,7 @@ export const metadata = {
   title: "9Router - AI Infrastructure Management",
   description: "One endpoint for all your AI providers. Manage keys, monitor usage, and scale effortlessly.",
   icons: {
-    icon: "/favicon.svg",
+    icon: withBasePath("/favicon.svg"),
   },
 };
 
@@ -32,6 +33,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Sub-path builds: raw fetch()/EventSource() calls are not prefixed by
+            Next.js basePath handling, so wrap them before any client code runs. */}
+        {BASE_PATH ? (
+          <script dangerouslySetInnerHTML={{ __html: basePathRequestShim(BASE_PATH) }} />
+        ) : null}
         {/* Apply persisted theme before first paint so a reload does not flash the
             default (light) theme before the client store hydrates. Mirrors the
             zustand-persist "theme" key and the `dark` class applyTheme() sets. */}

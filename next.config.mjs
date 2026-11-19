@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { normalizeBasePath } from "./src/shared/utils/basePath.js";
 
 const projectRoot = dirname(fileURLToPath(import.meta.url));
 // CLI bundling needs workspace root so tracing includes hoisted node_modules (slim ~50MB).
@@ -8,11 +9,15 @@ const tracingRoot = process.env.NEXT_TRACING_ROOT_MODE === "workspace"
   ? join(projectRoot, "..")
   : projectRoot;
 const proxyClientMaxBodySize = process.env.NINEROUTER_PROXY_CLIENT_MAX_BODY_SIZE || "128mb";
+// Build-time sub-path deploy (e.g. /9router behind a path-prefix reverse proxy).
+// Empty = serve from the domain root, which is the historical default.
+const basePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
   output: "standalone",
+  ...(basePath ? { basePath } : {}),
   // Dev only: Next blocks /_next assets for hosts other than localhost. Devin
   // OAuth must redirect to http://127.0.0.1:<port>/callback, which needs them.
   allowedDevOrigins: ["127.0.0.1"],

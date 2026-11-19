@@ -1,5 +1,6 @@
 import { SAML } from "@node-saml/node-saml";
 import { getSettings } from "../db/repos/settingsRepo.js";
+import { withBasePath } from "../../shared/utils/basePath.js";
 
 /**
  * Formats a raw Base64 string or unformatted X.509 certificate into standard PEM format.
@@ -89,7 +90,7 @@ export function getSamlBaseUrl(request, settings) {
 
 export function createSamlInstance(settings, origin) {
   const cert = formatX509Certificate(settings?.samlCert || "") || DUMMY_FALLBACK_CERT;
-  const callbackUrl = `${origin}/api/auth/saml/acs`;
+  const callbackUrl = `${origin}${withBasePath("/api/auth/saml/acs")}`;
   return new SAML({
     entryPoint: settings?.samlEntryPoint || "https://example.com/sso",
     issuer: settings?.samlIssuer || "urn:9router:sp",

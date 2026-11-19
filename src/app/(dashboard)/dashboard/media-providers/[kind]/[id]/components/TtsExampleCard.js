@@ -10,6 +10,7 @@ import { translate } from "@/i18n/runtime";
 import { getTtsVoicesForModel } from "open-sse/config/ttsModels.js";
 import { GOOGLE_TTS_LANGUAGES } from "open-sse/config/googleTtsLanguages.js";
 import { Row } from "./exampleShared";
+import { getAppBaseUrl } from "@/shared/utils/basePath";
 
 const DEFAULT_TTS_RESPONSE_EXAMPLE = `// Audio will appear here after running.
 // Example JSON response (response_format=json):
@@ -116,7 +117,7 @@ export function TtsExampleCard({ providerId }) {
   const [connectionCount, setConnectionCount] = useState(0);
 
   useEffect(() => {
-    setLocalEndpoint(window.location.origin);
+    setLocalEndpoint(getAppBaseUrl());
     fetch("/api/keys")
       .then((r) => r.json())
       .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, Badge, Modal, Input, ModelSelectModal } from "@/shared/components";
 import Image from "next/image";
+import { withBasePath } from "@/shared/utils/basePath";
 
 export default function AntigravityToolCard({
   tool,
@@ -231,7 +232,7 @@ export default function AntigravityToolCard({
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
             <Image
-              src="/providers/antigravity.png"
+              src={withBasePath("/providers/antigravity.png")}
               alt={tool.name}
               width={32}
               height={32}

@@ -7,6 +7,7 @@ import { getModelsByProviderId, getModelKind } from "@/shared/constants/models";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { INPUT_TYPE_VALUES, DEFAULT_INPUT_TYPE } from "open-sse/config/embeddingParams.js";
 import { Row } from "./exampleShared";
+import { getAppBaseUrl } from "@/shared/utils/basePath";
 
 const DEFAULT_RESPONSE_EXAMPLE = `{
   "object": "list",
@@ -43,7 +44,7 @@ export function EmbeddingExampleCard({ providerId, customAlias }) {
   const { copied: copiedRes, copy: copyRes } = useCopyToClipboard();
 
   useEffect(() => {
-    setLocalEndpoint(window.location.origin);
+    setLocalEndpoint(getAppBaseUrl());
     fetch("/api/keys")
       .then((r) => r.json())
       .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })

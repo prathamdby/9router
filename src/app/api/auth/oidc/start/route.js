@@ -10,19 +10,20 @@ import {
   getPublicOrigin,
 } from "@/lib/auth/oidc";
 import { shouldUseSecureCookie } from "@/lib/auth/dashboardSession";
+import { COOKIE_PATH, withBasePath } from "@/shared/utils/basePath";
 
 export async function GET(request) {
   try {
     const config = await getOidcRuntimeConfig();
     if (!config) {
-      return NextResponse.redirect(new URL("/login?error=oidc_not_configured", getPublicOrigin(request)));
+      return NextResponse.redirect(new URL(withBasePath("/login?error=oidc_not_configured"), getPublicOrigin(request)));
     }
 
     const discovery = await fetchOidcDiscovery(config.issuerUrl);
     const state = createOidcState();
     const nonce = createOidcNonce();
     const { verifier, challenge } = createPkcePair();
-    const redirectUri = `${getPublicOrigin(request)}/api/auth/oidc/callback`;
+    const redirectUri = `${getPublicOrigin(request)}${withBasePath("/api/auth/oidc/callback")}`;
     const authUrl = buildOidcAuthorizationUrl({
       authorizationEndpoint: discovery.authorization_endpoint,
       clientId: config.clientId,
@@ -38,7 +39,7 @@ export async function GET(request) {
       httpOnly: true,
       secure: shouldUseSecureCookie(request),
       sameSite: "lax",
-      path: "/",
+      path: COOKIE_PATH,
       maxAge: 10 * 60,
     };
     cookieStore.set("oidc_state", state, baseOptions);
@@ -47,6 +48,6 @@ export async function GET(request) {
 
     return NextResponse.redirect(authUrl);
   } catch (error) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message || "oidc_start_failed")}`, getPublicOrigin(request)));
+    return NextResponse.redirect(new URL(withBasePath(`/login?error=${encodeURIComponent(error.message || "oidc_start_failed")}`), getPublicOrigin(request)));
   }
 }

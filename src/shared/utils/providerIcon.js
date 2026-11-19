@@ -1,6 +1,8 @@
 // Provider icon paths under /public/providers.
 // Alias related brands; session-cache 404s so one miss never spams again.
 
+import { withBasePath } from "@/shared/utils/basePath";
+
 const ICON_ALIASES = {
   "perplexity-agent": "perplexity",
   "gitlab-duo": "gitlab",
@@ -39,7 +41,7 @@ export function resolveProviderIconId(providerId) {
 /** `/providers/{id}.png` or null when previously failed. */
 export function getProviderIconSrc(providerId) {
   const id = resolveProviderIconId(providerId);
-  return id ? `/providers/${id}.png` : null;
+  return id ? withBasePath(`/providers/${id}.png`) : null;
 }
 
 /** Call from img onError so later mounts skip the request. */
