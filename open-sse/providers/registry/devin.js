@@ -10,7 +10,7 @@ export default {
   display: {
     name: "Devin",
     icon: "smart_toy",
-    color: "#6366F1",
+    color: "#317cff",
     textIcon: "DV",
     website: "https://devin.ai",
     notice: { signupUrl: "https://app.devin.ai" },
