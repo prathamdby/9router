@@ -9,6 +9,7 @@ import ApiKeySelect from "./ApiKeySelect";
 import { matchKnownEndpoint } from "./cliEndpointMatch";
 import { rememberEndpoint } from "./cliEndpointPresets";
 import { getCurrentCodexProviderSettings, deriveProfileNameFromModel } from "./codexConfig";
+import { withBasePath } from "@/shared/utils/basePath";
 
 export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, apiKeys, activeProviders, cloudEnabled, initialStatus, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl }) {
   const [codexStatus, setCodexStatus] = useState(initialStatus || null);
@@ -291,7 +292,7 @@ default_subagent_model = "${effectiveSubagentModel}"
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
-            <Image src="/providers/codex.png" alt={tool.name} width={32} height={32} className="size-8 object-contain rounded-lg" sizes="32px" onError={(e) => { e.target.style.display = "none"; }} loading="lazy" decoding="async" />
+            <Image src={withBasePath("/providers/codex.png")} alt={tool.name} width={32} height={32} className="size-8 object-contain rounded-lg" sizes="32px" onError={(e) => { e.target.style.display = "none"; }} loading="lazy" decoding="async" />
           </div>
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-2">

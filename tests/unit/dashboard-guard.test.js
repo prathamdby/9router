@@ -30,6 +30,7 @@ vi.mock("@/shared/utils/machineId", () => ({
 }));
 
 vi.mock("@/lib/auth/dashboardSession", () => ({
+  AUTH_COOKIE_NAME: "auth_token",
   verifyDashboardAuthToken: mocks.verifyDashboardAuthToken,
 }));
 
@@ -284,6 +285,59 @@ describe("dashboard guard local-only access", () => {
     }));
 
     expect(response).toBe(mocks.nextResponse);
+  });
+});
+
+describe("dashboard guard under a base path", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.NINEROUTER_PEER_TOKEN = PEER_TOKEN;
+    mocks.getSettings.mockResolvedValue({ requireLogin: true });
+    mocks.getConsistentMachineId.mockResolvedValue("cli-token");
+    mocks.verifyDashboardAuthToken.mockResolvedValue(false);
+  });
+
+  it("redirects unauthenticated /dashboard to the base-path login URL", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/9router");
+    vi.resetModules();
+    try {
+      const { proxy: proxyUnderBase } = await import("../../src/dashboardGuard.js");
+      // Next strips basePath from nextUrl.pathname before proxy runs; the
+      // redirect must still point back under the base path.
+      const req = {
+        nextUrl: { pathname: "/dashboard", searchParams: new URL("http://localhost/9router/dashboard").searchParams },
+        headers: new Headers({ host: "router.example.com" }),
+        cookies: { get: vi.fn(() => undefined) },
+        url: "http://localhost/9router/dashboard",
+      };
+      const response = await proxyUnderBase(req);
+      expect(response.status).toBe(307);
+      expect(new URL(response.url).pathname).toBe("/9router/login");
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
+  it("rejects unauthenticated /api/keys under the base path with 401", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/9router");
+    vi.resetModules();
+    try {
+      const { proxy: proxyUnderBase } = await import("../../src/dashboardGuard.js");
+      // Next strips basePath from nextUrl.pathname before proxy runs; the
+      // guard must still 401 protected API routes, not serve them.
+      const req = {
+        nextUrl: { pathname: "/api/keys", searchParams: new URL("http://localhost/9router/api/keys").searchParams },
+        headers: new Headers({ host: "router.example.com" }),
+        cookies: { get: vi.fn(() => undefined) },
+        url: "http://localhost/9router/api/keys",
+      };
+      const response = await proxyUnderBase(req);
+      expect(response.status).toBe(401);
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 });
 

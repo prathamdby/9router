@@ -7,6 +7,7 @@ import { getModelKind } from "@/shared/constants/models";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { Row } from "./exampleShared";
+import { getAppBaseUrl } from "@/shared/utils/basePath";
 
 export function SttExampleCard({ providerId }) {
   const providerAlias = getProviderAlias(providerId);
@@ -40,7 +41,7 @@ export function SttExampleCard({ providerId }) {
   const { copied: copiedRes, copy: copyRes } = useCopyToClipboard();
 
   useEffect(() => {
-    setLocalEndpoint(window.location.origin);
+    setLocalEndpoint(getAppBaseUrl());
     fetch("/api/keys")
       .then((r) => r.json())
       .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })

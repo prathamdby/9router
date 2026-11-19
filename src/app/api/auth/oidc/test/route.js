@@ -2,14 +2,15 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSettings } from "@/lib/localDb";
 import { fetchOidcDiscovery, getPublicOrigin, probeOidcClientSecret } from "@/lib/auth/oidc";
-import { verifyDashboardAuthToken } from "@/lib/auth/dashboardSession";
+import { AUTH_COOKIE_NAME, verifyDashboardAuthToken } from "@/lib/auth/dashboardSession";
+import { withBasePath } from "@/shared/utils/basePath";
 
 async function canAccessTestRoute() {
   const settings = await getSettings();
   if (settings.requireLogin === false) return true;
 
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
+  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   return await verifyDashboardAuthToken(token);
 }
 
@@ -39,7 +40,7 @@ export async function POST(request) {
     }
 
     const discovery = await fetchOidcDiscovery(issuerUrl);
-    const redirectUri = `${getPublicOrigin(request)}/api/auth/oidc/callback`;
+    const redirectUri = `${getPublicOrigin(request)}${withBasePath("/api/auth/oidc/callback")}`;
     const secretProbe = await probeOidcClientSecret({
       tokenEndpoint: discovery.token_endpoint,
       clientId,

@@ -5,9 +5,14 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { DATA_DIR } from "@/lib/dataDir";
 import { getSettings } from "@/lib/localDb";
+import { BASE_PATH, COOKIE_PATH } from "@/shared/utils/basePath";
 
 const DEFAULT_PASSWORD = "123456";
 const SESSION_MAX_AGE_SEC = 24 * 60 * 60;
+// On a shared domain a foreign root-path "auth_token" would win over a
+// path-scoped one (last duplicate in the cookie map), so sub-path builds use a
+// distinct name. Root builds keep "auth_token" (no forced logout on upgrade).
+export const AUTH_COOKIE_NAME = BASE_PATH ? "9router_auth_token" : "auth_token";
 
 function loadJwtSecret() {
   if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
@@ -60,17 +65,18 @@ export async function getDashboardAuthSession(token) {
 
 export async function setDashboardAuthCookie(cookieStore, request, claims = {}) {
   const token = await createDashboardAuthToken(claims);
-  cookieStore.set("auth_token", token, {
+  cookieStore.set(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: shouldUseSecureCookie(request),
     sameSite: "lax",
-    path: "/",
+    path: COOKIE_PATH,
     maxAge: SESSION_MAX_AGE_SEC,
   });
 }
 
 export function clearDashboardAuthCookie(cookieStore) {
-  cookieStore.delete("auth_token");
+  // A bare delete() writes Path=/, which cannot clear a path-scoped cookie.
+  cookieStore.delete({ name: AUTH_COOKIE_NAME, path: COOKIE_PATH });
 }
 
 // Verify the current dashboard password (re-auth for sensitive actions).

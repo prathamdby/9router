@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import os from "os";
 import { UPDATER_CONFIG } from "@/shared/constants/config";
+import { BASE_PATH } from "@/shared/utils/basePath";
 
 const KILL_TIMEOUT_MS = 5000;
 const PROCESS_WAIT_MS = 1500;
@@ -190,6 +191,7 @@ export function spawnUpdaterAndExit(packageName = UPDATER_CONFIG.npmPackageName)
       UPDATER_WAIT_MAX_MS: String(UPDATER_CONFIG.waitForExitMaxMs),
       UPDATER_WAIT_CHECK_MS: String(UPDATER_CONFIG.waitForExitCheckMs),
       UPDATER_APP_PORT: String(UPDATER_CONFIG.appPort),
+      UPDATER_BASE_PATH: BASE_PATH,
       UPDATER_RELAUNCH: "1",
       UPDATER_RELAUNCH_CMD: relaunch.cmd,
       UPDATER_RELAUNCH_ARGS: JSON.stringify(relaunchArgs),

@@ -1,0 +1,37 @@
+# Sub-path deployment behind a reverse proxy (Dokploy/Traefik): the image is
+# built locally so NEXT_PUBLIC_BASE_PATH is baked into the client bundles at
+# build time. No host ports — the reverse proxy owns ingress and forwards to
+# http://9router:20128.
+services:
+  9router:
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-unknown}
+        NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-/9router}
+    image: 9router:local
+    container_name: 9router
+    restart: always
+    volumes:
+      - 9router-data:/app/data
+    env_file:
+      - .env
+    environment:
+      DATA_DIR: /app/data
+      PORT: "20128"
+      HOSTNAME: "0.0.0.0"
+      NODE_ENV: production
+      HEADROOM_URL: http://headroom:8787
+    depends_on:
+      - headroom
+
+  headroom:
+    image: ghcr.io/chopratejas/headroom:latest
+    container_name: headroom
+    restart: always
+    ports:
+      - "127.0.0.1:8787:8787"
+
+volumes:
+  9router-data:
+    name: 9router-data

@@ -14,6 +14,7 @@ import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
 import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS } from "@/shared/constants/providers";
 import { getProviderIconSrc } from "@/shared/utils/providerIcon";
 import { translate } from "@/i18n/runtime";
+import { withBasePath } from "@/shared/utils/basePath";
 
 const getPageInfo = (pathname) => {
   if (!pathname) return { title: "", description: "", breadcrumbs: [] };
@@ -219,7 +220,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
-        window.location.assign("/login");
+        window.location.assign(withBasePath("/login"));
       }
     } catch (err) {
       console.error("Failed to logout:", err);

@@ -8,6 +8,7 @@ import BaseUrlSelect from "./BaseUrlSelect";
 import { rememberEndpoint } from "./cliEndpointPresets";
 import ApiKeySelect from "./ApiKeySelect";
 import { matchKnownEndpoint } from "./cliEndpointMatch";
+import { getAppBaseUrl, getInternalBaseUrl, withBasePath } from "@/shared/utils/basePath";
 
 const ENDPOINT = "/api/cli-tools/grok-build-settings";
 const MODEL_SLOT = "9router";
@@ -155,8 +156,8 @@ export default function GrokBuildToolCard({
 
   const getEffectiveBaseUrl = () => {
     const url = customBaseUrl || (typeof window !== "undefined"
-      ? window.location.origin.replace("://localhost", "://127.0.0.1")
-      : "http://127.0.0.1:20128");
+      ? getAppBaseUrl().replace("://localhost", "://127.0.0.1")
+      : getInternalBaseUrl());
     return url.endsWith("/v1") ? url : `${url}/v1`;
   };
 
@@ -257,7 +258,7 @@ export default function GrokBuildToolCard({
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
             <Image
-              src={tool.image || "/providers/grok-cli.png"}
+              src={tool.image || withBasePath("/providers/grok-cli.png")}
               alt={tool.name}
               width={32}
               height={32}

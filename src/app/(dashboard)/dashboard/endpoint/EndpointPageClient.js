@@ -19,6 +19,7 @@ import StatusAlert from "./components/StatusAlert";
 import Tooltip from "./components/Tooltip";
 import SecurityWarning from "./components/SecurityWarning";
 import KeyAccessControls from "./components/KeyAccessControls";
+import { getAppBaseUrl, withBasePath } from "@/shared/utils/basePath";
 export default function APIPageClient({ machineId }) {
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -708,12 +709,12 @@ export default function APIPageClient({ machineId }) {
     });
   };
 
-  const [baseUrl, setBaseUrl] = useState("/v1");
+  const [baseUrl, setBaseUrl] = useState(withBasePath("/v1"));
 
   // Hydration fix: Only access window on client side
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setBaseUrl(`${window.location.origin}/v1`);
+      setBaseUrl(`${getAppBaseUrl()}/v1`);
     }
   }, []);
 

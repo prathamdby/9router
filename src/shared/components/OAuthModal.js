@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import { Modal, Button, Input } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { isTrustedOAuthMessageOrigin } from "@/shared/utils/loopbackOrigin.js";
+import { getAppBaseUrl } from "@/shared/utils/basePath";
 
 // Providers using the dynamic-port local callback proxy.
 // Browser OAuth: popup → auto callback → auto exchange → poll-status.
@@ -77,7 +78,7 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       setIsLocalhost(
         window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
       );
-      setPlaceholderUrl(`${window.location.origin}/callback?code=...`);
+      setPlaceholderUrl(`${getAppBaseUrl()}/callback?code=...`);
     }
   }, []);
 
