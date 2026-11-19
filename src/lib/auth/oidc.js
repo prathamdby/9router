@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getSettings } from "@/lib/localDb";
+import { stripBasePathSuffix } from "@/shared/utils/basePath";
 
 export const OIDC_COOKIE_NAMES = {
   state: "oidc_state",
@@ -26,7 +27,7 @@ export function getPublicOrigin(request) {
     "";
 
   if (configuredBaseUrl) {
-    return trimTrailingSlashes(configuredBaseUrl);
+    return stripBasePathSuffix(trimTrailingSlashes(configuredBaseUrl));
   }
 
   const forwardedProto = request?.headers?.get?.("x-forwarded-proto") || "";

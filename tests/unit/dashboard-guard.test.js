@@ -318,6 +318,27 @@ describe("dashboard guard under a base path", () => {
       vi.resetModules();
     }
   });
+
+  it("rejects unauthenticated /api/keys under the base path with 401", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/9router");
+    vi.resetModules();
+    try {
+      const { proxy: proxyUnderBase } = await import("../../src/dashboardGuard.js");
+      // Next strips basePath from nextUrl.pathname before proxy runs; the
+      // guard must still 401 protected API routes, not serve them.
+      const req = {
+        nextUrl: { pathname: "/api/keys", searchParams: new URL("http://localhost/9router/api/keys").searchParams },
+        headers: new Headers({ host: "router.example.com" }),
+        cookies: { get: vi.fn(() => undefined) },
+        url: "http://localhost/9router/api/keys",
+      };
+      const response = await proxyUnderBase(req);
+      expect(response.status).toBe(401);
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
 });
 
 describe("dashboard guard helpers", () => {
