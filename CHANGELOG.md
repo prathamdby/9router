@@ -1,3 +1,8 @@
+# Unreleased
+
+## Features
+- **Devin**: add a native `devin` provider — OAuth PKCE login against `app.devin.ai` (loopback redirect plus headless authorization-code and session-token paste), a Connect-RPC protobuf executor calling `GetChatMessage` on `server.codeium.com` with thinking/tool-call/signature handling, model-UID resolution across the SWE/Claude catalog, `GetUserStatus` quota rows for the dashboard, and a Test-button probe. `devin-cli` keeps its own id but drops the `devin` alias it was squatting on.
+
 # v0.5.119 (2026-11-11)
 
 ## Features

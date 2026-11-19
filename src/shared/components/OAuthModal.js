@@ -366,6 +366,9 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         redirectUri = "http://localhost:1455/auth/callback";
       } else if (provider === "xai") {
         redirectUri = "http://127.0.0.1:56121/callback";
+      } else if (provider === "devin") {
+        // Devin only accepts the 127.0.0.1 loopback twin of the app port.
+        redirectUri = `http://127.0.0.1:${appPort}/callback`;
       } else {
         redirectUri = `http://localhost:${appPort}/callback`;
       }
@@ -373,6 +376,11 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       // Build authorize URL first to get codeVerifier/state for codex server-side mode
       const authorizeUrl = new URL(`/api/oauth/${provider}/authorize`, window.location.origin);
       authorizeUrl.searchParams.set("redirect_uri", redirectUri);
+      // Devin headless/manual flow (non-local dashboard): omit redirect_uri on
+      // the upstream URL and show a copyable code via cli_pkce_marker=1.
+      if (provider === "devin" && !isLocalhost) {
+        authorizeUrl.searchParams.set("headless", "1");
+      }
       if (oauthMeta) {
         Object.entries(oauthMeta).forEach(([k, v]) => { if (v) authorizeUrl.searchParams.set(k, v); });
       }
@@ -715,6 +723,12 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         return;
       }
 
+      if (provider === "devin" && input && !/^https?:\/\//i.test(input)) {
+        // Raw authorization code or devin-session-token$… / JWT paste.
+        await exchangeTokens(input, null);
+        return;
+      }
+
       const url = new URL(input);
       const code = url.searchParams.get("code");
       const token = url.searchParams.get("token");
@@ -757,9 +771,11 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
   const modalTitle = isXaiProvider ? "Connect Grok Build OAuth" : `Connect ${providerInfo.name}`;
   const manualPlaceholder = isXaiProvider
     ? "http://127.0.0.1:56121/callback?code=... or copied code"
-    : isKimchiProvider
-      ? `${placeholderUrl.replace("code=...", "token=...")} or copied token`
-      : placeholderUrl;
+    : provider === "devin"
+      ? "Paste the code shown by Devin (or a session token)"
+      : isKimchiProvider
+        ? `${placeholderUrl.replace("code=...", "token=...")} or copied token`
+        : placeholderUrl;
 
   return (
     <Modal isOpen={isOpen} title={modalTitle} onClose={handleClose} size="lg">
