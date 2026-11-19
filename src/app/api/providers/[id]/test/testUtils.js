@@ -30,6 +30,7 @@ import {
 } from "@/lib/oauth/constants/oauth";
 import { buildClineHeaders } from "@/shared/utils/clineAuth";
 import { hasWebIdentityProbe, fetchWebIdentity } from "open-sse/services/webIdentity.js";
+import { fetchDevinUserStatus } from "open-sse/shared/devinAuth.js";
 
 // OAuth provider test endpoints
 const OAUTH_TEST_CONFIG = {
@@ -103,6 +104,8 @@ const OAUTH_TEST_CONFIG = {
     authPrefix: "Bearer ",
   },
   cline: { refreshable: true },
+  // Devin probes via Connect-RPC GetUserStatus — dedicated branch below.
+  devin: {},
   gitlab: {
     // Test by hitting the GitLab user API — requires api or read_user scope
     url: "https://gitlab.com/api/v4/user",
@@ -438,6 +441,27 @@ async function testOAuthConnection(connection, effectiveProxy = null) {
     newTokens = tokens;
     accessToken = tokens.accessToken;
     return await tryProbe(accessToken);
+  }
+
+  // Devin: GetUserStatus is the only safe validation endpoint — never send
+  // the session token through the generic Bearer probe below.
+  if (connection.provider === "devin") {
+    try {
+      const res = await fetchDevinUserStatus(accessToken, effectiveProxy);
+      if (res.status === 200) {
+        const d = res.data;
+        if (d && (d.userId || d.email || d.userName || d.plan)) {
+          return { valid: true, error: null, refreshed };
+        }
+        return { valid: false, error: "Devin status check returned no account data", refreshed };
+      }
+      if (res.status === 401 || res.status === 403) {
+        return { valid: false, error: "Token invalid or revoked", refreshed };
+      }
+      return { valid: false, error: `Devin status check failed (HTTP ${res.status})`, refreshed };
+    } catch (err) {
+      return { valid: false, error: `Devin status check failed (${err.message})`, refreshed };
+    }
   }
 
   try {

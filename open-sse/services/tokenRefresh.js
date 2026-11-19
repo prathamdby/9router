@@ -164,6 +164,8 @@ const REFRESH_HANDLERS = {
   "minimax-code": (c, log) => refreshMiniMaxCodeToken("minimax-code", c.refreshToken, log),
   "minimax-code-global": (c, log) => refreshMiniMaxCodeToken("minimax-code-global", c.refreshToken, log),
   nous: (c, log) => refreshNousToken(c.refreshToken, log),
+  // Devin session tokens are permanent — there is no refresh path.
+  devin: () => null,
   vertex: vertexRefreshHandler,
   "vertex-partner": vertexRefreshHandler
 };

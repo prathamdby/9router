@@ -357,6 +357,18 @@ export const PROVIDER_CAPABILITIES = {
     "gpt-5.5-medium": DEVIN_CLI_GPT_CAPS,
     "gpt-5.5-low": DEVIN_CLI_GPT_CAPS,
   },
+  // Native Devin reaches the same server.codeium.com gateway, so the dotted
+  // GPT variants it resolves share the gateway-enforced 200k cap (own table —
+  // the two providers expose different catalogs, this is not an alias).
+  "devin": {
+    "gpt-5.4-high": DEVIN_CLI_GPT_CAPS,
+    "gpt-5.4-medium": DEVIN_CLI_GPT_CAPS,
+    "gpt-5.4-low": DEVIN_CLI_GPT_CAPS,
+    "gpt-5.5-xhigh": DEVIN_CLI_GPT_CAPS,
+    "gpt-5.5-high": DEVIN_CLI_GPT_CAPS,
+    "gpt-5.5-medium": DEVIN_CLI_GPT_CAPS,
+    "gpt-5.5-low": DEVIN_CLI_GPT_CAPS,
+  },
   // CodeBuddy.cn — authoritative per-model metadata from the gateway's model
   // config (contextWindow=maxInputTokens, maxOutput=maxOutputTokens, vision=
   // supportsImages). Every model reasons via OpenAI-style reasoning_effort
@@ -476,7 +488,6 @@ PROVIDER_CAPABILITIES["qoder"] = {
 PROVIDER_CAPABILITIES["qoder-cn"] = PROVIDER_CAPABILITIES["qoder"];
 PROVIDER_CAPABILITIES.cx = PROVIDER_CAPABILITIES.codex;
 PROVIDER_CAPABILITIES.dv = PROVIDER_CAPABILITIES["devin-cli"];
-PROVIDER_CAPABILITIES.devin = PROVIDER_CAPABILITIES["devin-cli"];
 // The global mcode site serves the same catalog — share the capability table.
 PROVIDER_CAPABILITIES["minimax-code-global"] = PROVIDER_CAPABILITIES["minimax-code"];
 // SenseNova intl: limits from token.sensenova.ai/v1/models (context_length 262144,

@@ -1288,5 +1288,9 @@
   "synthetic": {
     "baseUrl": "https://api.synthetic.new/openai/v1/chat/completions",
     "format": "openai"
+  },
+  "devin": {
+    "baseUrl": "https://server.codeium.com/exa.api_server_pb.ApiServerService/GetChatMessage",
+    "format": "openai"
   }
 }
