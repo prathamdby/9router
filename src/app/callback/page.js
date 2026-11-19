@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { loopbackTwin } from "@/shared/utils/loopbackOrigin.js";
 
 /**
  * OAuth Callback Page Content
@@ -37,6 +38,11 @@ function CallbackContent() {
       window.location.origin, // Same origin (for most providers)
       "http://localhost:1455", // Codex specific port
     ];
+    // Devin's redirect_uri is pinned to the loopback twin of the dashboard
+    // host (localhost <-> 127.0.0.1, same scheme+port) — allow exactly that
+    // one alternate origin, never an arbitrary cross-origin relay.
+    const twin = loopbackTwin(window.location.origin);
+    if (twin) expectedOrigins.push(twin);
 
     // Method 1: postMessage to opener (popup mode)
     // Send once per expected origin. The browser delivers the message only

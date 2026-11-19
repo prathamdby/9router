@@ -1477,5 +1477,9 @@
         }
       }
     ]
+  },
+  "devin": {
+    "baseUrl": "https://server.codeium.com/exa.api_server_pb.ApiServerService/GetChatMessage",
+    "format": "openai"
   }
 }
