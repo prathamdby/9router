@@ -144,6 +144,20 @@ describe("Devin SWE-2.1 model metadata", () => {
     expect(getCapabilitiesForModel("devin", "swe-2-1-lightning")).toMatchObject(expected);
   });
 
+  it("publishes reasoning and vision for the SWE-2 family", () => {
+    const expected = {
+      vision: true,
+      reasoning: true,
+      thinkingFormat: "openai",
+      thinkingCanDisable: false,
+      maxOutput: 64000,
+    };
+    expect(getCapabilitiesForModel("devin", "swe-2")).toMatchObject({ ...expected, contextWindow: 262000 });
+    expect(getCapabilitiesForModel("devin", "swe-2-max")).toMatchObject({ ...expected, contextWindow: 262000 });
+    expect(getCapabilitiesForModel("devin", "swe-2-flash")).toMatchObject({ ...expected, contextWindow: 262144 });
+    expect(getCapabilitiesForModel("devin", "swe-2-lightning")).toMatchObject({ ...expected, contextWindow: 262144 });
+  });
+
   it("advertises exactly the upstream effort levels", () => {
     expect(getThinkingLevels("devin", "swe-2-1")).toEqual(["low", "medium", "high", "xhigh", "max"]);
   });

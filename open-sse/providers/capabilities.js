@@ -594,6 +594,11 @@ export const PATTERN_CAPABILITIES = [
 
   // Devin SWE-2.1 accepts image input, low through max effort, and cannot disable thinking.
   { pattern: "*swe-2-1*",     caps: { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 65536 } },
+  // Devin SWE-2 family (base, Flash, Lightning): image input plus medium/high/max effort,
+  // thinking always on. swe-2 keeps its catalogued 262000 window; flash/lightning use 262144.
+  { pattern: "*swe-2-flash*",     caps: { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 64000 } },
+  { pattern: "*swe-2-lightning*", caps: { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 64000 } },
+  { pattern: "*swe-2*",           caps: { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 262000, maxOutput: 64000 } },
 
   // ── OpenAI GPT-6.x (vision + thinking + web search) ──────────────
   // Image variants ("-image" suffix) are image models, not chat models — first
