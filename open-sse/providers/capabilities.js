@@ -592,6 +592,9 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*gemma*",         caps: { vision: true, contextWindow: 128000 } },
   { pattern: "*nanobanana*",    caps: { vision: true, imageOutput: true } },
 
+  // Devin SWE-2.1 accepts low through max effort and cannot disable thinking.
+  { pattern: "*swe-2-1*",     caps: { reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 65536 } },
+
   // ── OpenAI GPT-6.x (vision + thinking + web search) ──────────────
   // Image variants ("-image" suffix) are image models, not chat models — first
   // match wins, so they must precede the generic family entry below.

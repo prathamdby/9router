@@ -2,6 +2,10 @@
 // internal/runtime/executor/helps/devin_models.go.
 import { describe, it, expect } from "vitest";
 import { resolveDevinModelUid, hasDevinEffortSuffix, normalizeThinkingLevel } from "open-sse/utils/devinModels.js";
+import { DEVIN_MODELS } from "open-sse/config/devin.js";
+import { getCapabilitiesForModel } from "open-sse/providers/capabilities.js";
+import { getThinkingLevels } from "open-sse/providers/thinkingLevels.js";
+import { applyThinking } from "open-sse/translator/concerns/thinkingUnified.js";
 
 describe("resolveDevinModelUid", () => {
   it("defaults and prefix handling", () => {
@@ -38,6 +42,14 @@ describe("resolveDevinModelUid", () => {
     expect(resolveDevinModelUid("claude-opus-4-7:low")).toBe("claude-opus-4-7-low");
   });
 
+  it("resolves SWE-2.1 through dotted and canonical ids", () => {
+    expect(resolveDevinModelUid("swe-2.1")).toBe("swe-2-1-high");
+    expect(resolveDevinModelUid("swe-2-1")).toBe("swe-2-1-high");
+    expect(resolveDevinModelUid("swe-2-1:medium")).toBe("swe-2-1-medium");
+    expect(resolveDevinModelUid("swe-2-1:xhigh")).toBe("swe-2-1-xhigh");
+    expect(resolveDevinModelUid("swe-2-1:max")).toBe("swe-2-1-max");
+  });
+
   it("thinking level / budget parameters drive effort", () => {
     expect(resolveDevinModelUid("swe-2", "max")).toBe("swe-2-max");
     // 2000 budget → "low" → clamped up to medium (swe-2 lacks low/minimal)
@@ -66,6 +78,9 @@ describe("resolveDevinModelUid", () => {
     expect(resolveDevinModelUid("swe-2-lightning")).toBe("swe-2-high-lightning");
     expect(resolveDevinModelUid("swe-2-lightning:medium")).toBe("swe-2-medium-lightning");
     expect(resolveDevinModelUid("swe-2-max-lightning")).toBe("swe-2-max-lightning");
+    expect(resolveDevinModelUid("swe-2-1-lightning")).toBe("swe-2-1-high-lightning");
+    expect(resolveDevinModelUid("swe-2-1-lightning:low")).toBe("swe-2-1-low-lightning");
+    expect(resolveDevinModelUid("swe-2-1-max-lightning")).toBe("swe-2-1-max-lightning");
   });
 
   it("clamps unsupported efforts to nearest level, higher wins ties", () => {
@@ -93,6 +108,48 @@ describe("resolveDevinModelUid", () => {
     expect(resolveDevinModelUid("deepseek-v4-pro")).toBe("deepseek-v4-pro-high");
     expect(resolveDevinModelUid("totally-custom-model")).toBe("totally-custom-model");
     expect(resolveDevinModelUid("kimi-k2-6")).toBe("kimi-k2-6");
+  });
+});
+
+describe("Devin SWE-2.1 model metadata", () => {
+  it("is present in the native Devin catalog", () => {
+    expect(DEVIN_MODELS.find((m) => m.id === "swe-2-1")).toMatchObject({
+      name: "SWE-2.1",
+      contextLength: 262144,
+      maxCompletionTokens: 65536,
+      levels: ["low", "medium", "high", "xhigh", "max"],
+    });
+  });
+
+  it("includes the Ultrafast lightning variant family", () => {
+    expect(DEVIN_MODELS.find((m) => m.id === "swe-2-1-lightning")).toMatchObject({
+      name: "SWE-2.1 Lightning",
+      contextLength: 262144,
+      maxCompletionTokens: 65536,
+      levels: ["low", "medium", "high", "xhigh", "max"],
+    });
+  });
+
+  it("publishes reasoning and token limits for base and effort ids", () => {
+    const expected = {
+      reasoning: true,
+      thinkingFormat: "openai",
+      thinkingCanDisable: false,
+      contextWindow: 262144,
+      maxOutput: 65536,
+    };
+    expect(getCapabilitiesForModel("devin", "swe-2-1")).toMatchObject(expected);
+    expect(getCapabilitiesForModel("devin", "swe-2-1-max")).toMatchObject(expected);
+  });
+
+  it("advertises exactly the upstream effort levels", () => {
+    expect(getThinkingLevels("devin", "swe-2-1")).toEqual(["low", "medium", "high", "xhigh", "max"]);
+  });
+
+  it("keeps max reasoning effort through OpenAI normalization", () => {
+    const body = { reasoning_effort: "max" };
+    applyThinking("openai", "swe-2-1", body, "devin");
+    expect(body.reasoning_effort).toBe("max");
   });
 });
 

@@ -42,6 +42,7 @@ const CLAUDE_NO_XHIGH = ["none", "low", "medium", "high", "max"];
 const AG_CLAUDE_5_5_LEVELS = ["low", "medium", "high", "max"];
 // Model-name pattern overrides (glob, first match wins) — more precise than format default.
 const PATTERN_THINKING = [
+  { pattern: "*swe-2-1*", levels: ["low", "medium", "high", "xhigh", "max"] },
   // Gemini 4 Neon & Hydrogen support xhigh in addition to low/medium/high (no minimal/none).
   { pattern: "*gemini-4-neon*", levels: ["low", "medium", "high", "xhigh"] },
   { pattern: "*gemini-4-hydrogen*", levels: ["low", "medium", "high", "xhigh"] },

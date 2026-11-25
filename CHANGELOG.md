@@ -2,6 +2,7 @@
 
 ## Features
 - **Deploy**: serve the app under a URL sub-path (e.g. `https://host/9router`) via the build-time `NEXT_PUBLIC_BASE_PATH` — applies the Next.js `basePath`, prefixes raw `fetch`/`EventSource` calls through an early client shim, scopes the auth cookie to the sub-path (`9router_auth_token`), and covers redirects, OAuth/OIDC/SAML callback URLs, static assets, and server self-fetches. `docker-compose.dokploy.yml` builds a local image with the base path as a build arg for reverse-proxy ingress. Unset keeps root-path behavior unchanged.
+- **Devin**: add SWE-2.1 and SWE-2.1 Lightning to the native catalog, including low through xhigh/max effort resolution, 262K context, and 65,536 max output tokens.
 - **Devin**: add a native `devin` provider — OAuth PKCE login against `app.devin.ai` (loopback redirect plus headless authorization-code and session-token paste), a Connect-RPC protobuf executor calling `GetChatMessage` on `server.codeium.com` with thinking/tool-call/signature handling, model-UID resolution across the SWE/Claude catalog, `GetUserStatus` quota rows for the dashboard, and a Test-button probe. `devin-cli` keeps its own id but drops the `devin` alias it was squatting on.
 
 # v0.5.123 (2026-11-22)

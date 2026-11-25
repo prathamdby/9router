@@ -38,6 +38,8 @@ export const DEVIN_STANDARD_LEVEL_ORDER = ["minimal", "low", "medium", "high", "
 // Model catalog ported from CLIProxyAPI internal/registry/models/devin_models.json.
 // levels = thinking levels the upstream model accepts (absent = bare uid only).
 export const DEVIN_MODELS = [
+  { id: "swe-2-1", name: "SWE-2.1", contextLength: 262144, maxCompletionTokens: 65536, levels: ["low", "medium", "high", "xhigh", "max"] },
+  { id: "swe-2-1-lightning", name: "SWE-2.1 Lightning", contextLength: 262144, maxCompletionTokens: 65536, levels: ["low", "medium", "high", "xhigh", "max"] },
   { id: "swe-2", name: "SWE-2", contextLength: 262000, maxCompletionTokens: 64000, levels: ["medium", "high", "max"] },
   { id: "swe-2-flash", name: "SWE-2 Flash", contextLength: 262144, maxCompletionTokens: 64000, levels: ["medium", "high", "max"] },
   { id: "claude-fable-5-2", name: "Claude Fable 5.2", contextLength: 1000000, maxCompletionTokens: 64000, levels: ["low", "medium", "high", "xhigh", "max"] },
