@@ -130,8 +130,9 @@ describe("Devin SWE-2.1 model metadata", () => {
     });
   });
 
-  it("publishes reasoning and token limits for base and effort ids", () => {
+  it("publishes reasoning, vision, and token limits for base and effort ids", () => {
     const expected = {
+      vision: true,
       reasoning: true,
       thinkingFormat: "openai",
       thinkingCanDisable: false,
@@ -140,6 +141,7 @@ describe("Devin SWE-2.1 model metadata", () => {
     };
     expect(getCapabilitiesForModel("devin", "swe-2-1")).toMatchObject(expected);
     expect(getCapabilitiesForModel("devin", "swe-2-1-max")).toMatchObject(expected);
+    expect(getCapabilitiesForModel("devin", "swe-2-1-lightning")).toMatchObject(expected);
   });
 
   it("advertises exactly the upstream effort levels", () => {
